@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>备课助手</title>
+    <link rel="stylesheet" href="../css/public.css">
+    <link rel="stylesheet" href="../css/operate.css">
+    <script src="../js/plugins/jquery/dist/jquery.min.js"></script>
+    <!--<script src="../js/plugins/vue/dist/vue-dev.js"></script>-->
+    <script src="../js/public.js"></script>
+    <!--<script  src="../js/vue-nav.js"></script>-->
+    <script src="../js/plugins/vue/dist/vue.min.js"></script>
+    <script src="../js/vue-nav.js"></script>
+
+</head>
+<body>
+<div class="alertTopBar"></div>
+<div id="container" v-cloak>
+    <header id="vhead">
+        <vheader title="备课助手"></vheader>
+    </header>
+    <div class="maincontent clearfix">
+        <div class="lft">
+            <div class="school">
+                <dl @click="showPhase">
+                    <dt>学段</dt>
+                    <dd><span>{{phaseName}}</span>
+                        <div class="pList" v-show="phaseDisplay">
+                            <ul class="phase">
+                                <li v-for="p in phaseList" :data-code="p.code" @click="choosePhase(p.code,p.name)">{{p.name}}</li>
+                            </ul>
+                        </div>
+                    </dd>
+                </dl>
+                <dl @click="showSubject">
+                    <dt>学科</dt>
+                    <dd><span>{{subjectName}}</span>
+                        <div class="pList" v-show="subjectDisplay">
+                            <ul class="subject">
+                                <li v-for="s in subjectList" :data-code="s.code" @click="chooseSubject(s.code,s.name)">{{s.name}}</li>
+                            </ul>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            <div class="tabSwitch">
+                <ul class="tabs">
+                    <li data-code="1">教材</li>
+                </ul>
+                <ul class="knowledge-tree">
+                    <item-tree class="item" :model="treeData" @chooseitem="chooseitem" :closestat="trigger"></item-tree>
+                </ul>
+            </div>
+        </div>
+        <div class="rht">
+            <ul class="breadcrumb">
+                <li class="bc-li">{{phaseName}}<span v-show="subjectName && subjectName!=''">·</span></li>
+                <li class="bc-li">{{subjectName}}</li>
+                <div v-html="appendItems"></div>
+                <!--<li class="bc-version">{{navVer}}<span v-show="navVer && navVer!=''">·</span></li>-->
+                <!--<li class="bc-volume">{{navVol}}<span v-show="navVol && navVol!=''">·</span></li>-->
+                <!--<li class="bc-chapter">{{navChap}}<span v-show="navChap && navChap!=''">·</span></li>-->
+                <!--<li class="bc-section">{{navSec}}<span v-show="navSec && navSec!=''">·</span></li>-->
+                <!--<li class="bc-item">{{navItem}}<span v-show="navItem && navItem!=''">·</span></li>-->
+                <!--<li class="bc-period chosen">{{navPer}}<span v-show="navPer && navPer!=''">·</span></li>-->
+            </ul>
+            <dl class="nav-tabs">
+                <dt class="clearfix">
+                    <span :class="['present',{'tab-selected': tabSelected==0},'op-hover']" @click="toggleTabs(0)">我的备课</span>
+                    <span :class="['present',{'tab-selected': tabSelected==1},'op-hover']" @click="toggleTabs(1)">推荐资源</span>
+                    <span class="tips" v-show="displayAd">资源更新啦~</span>
+                    <span v-if="showTab==0" class="btns">
+                        <a href="javascript:void(0)" class="add op-hover"  @click="navClick('../index.html')">添加</a>
+                        <!--<a href="javascript:void(0)" class="download disable-btn">下载</a>-->
+                    </span>
+                    <span v-else class="btns">
+                        <a href="javascript:void(0)" class="addAdd op-hover" @click="addAllLessons">全部加入我的备课</a>
+                    </span>
+                </dt>
+                <!-- 我的备课 -->
+                <dd class="tab-pane show" v-if="showTab==0">
+                    <div class="with-resource" v-show="prepStat==0">
+                        <div class="contentBrdr hrContent">
+                            <dl>
+                                    <dd v-for="d in prepDataList">
+                                        <button class="removeToClass op-hover" @click.stop="removeLesson(d.mineId)">删除</button>
+                                        <a :href="'../details/details.html?resource_id='+d.resourceId" target="_blank" class="each-item">
+                                        <aside>
+                                            <ul>
+                                                <li class="title clearfix">
+                                                    <div class="types">
+                                                        <img :src="'../images/indexIcons/'+d.resourceFormatId+'.png'" alt="" class="hrNo">
+                                                        <span>{{d.resourceTypeOneLevelValue}}</span>
+                                                    </div>
+                                                    <span class="resTitle">{{d.resourceName}}</span>
+                                                    <img src="../images/bkzs/remmend.png" class="remIcon" v-if="d.resourceLevel=='0'">
+                                                </li>
+                                                <li class="wzcontent"><em>资源描述：</em>{{truncate(d.resourceDes)}}</li>
+                                                <li class="author"><em>资源作者：</em>{{d.createUserName}}</li>
+                                                <!--<li class="catalog"><em>版权期限：</em>{{getCopyrightName(d.copyright)}}</li>-->
+                                                <li class="knowlege"><em>知识点：</em><span> {{d.knowledgeName}}</span></li>
+                                                <li class="time"><em>上传时间：</em>{{d.createDateTime}}</li>
+                                                <li class="time2"><em>上传时间：</em>{{retime(d.createDateTime)}}</li>
+                                            </ul>
+
+                                        </aside>
+                                        <!--<div class="vt vtDown">-->
+                                            <!--<div class="fileSize">{{bytesToSize(d.fileSize)}}</div>-->
+                                            <!--<img src="images/defaultPhoto.png" alt="" class="photo">-->
+                                            <!--<a data-free="1" :data-href="'/static/stage/pay/submitOrder.html?resourceId='+d.id" class="price" v-if="d.isFree=='1' && d.isPurchased =='0'">¥ {{d.cost}}</a>-->
+                                        <!--</div>-->
+                                        <aside class="hrRht">
+                                            <div class="conlft">
+                                                <ul>
+                                                    <li class="hrNo">
+                                                        <span class="free" v-if="d.isFree=='0'">免费</span>
+                                                        <span class="free" v-if="d.isFree=='1'">收费</span>
+                                                        <span class="free" v-if="d.isFree=='2'">限时免费</span>
+                                                    </li>
+                                                    <li class="hrNo"><span class="viewNum">{{d.pageview || 0}}</span></li>
+                                                    <!--<li class="hrNo"><span class="collectNum">{{d.pageview}}</span></li>-->
+                                                    <li class="hrNo"><span class="downloadNum">{{d.downloads || 0}}</span></li>
+                                                    <li class="hrNo"><span class="fileSize">{{bytesToSize(d.fileSize)}}</span></li>
+                                                    <li>
+                                                        <img :src="'images/star/star'+parseInt(d.score)+'.png'" v-if="d.score>0 && d.score<=5" >
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </aside>
+                                            <img src="../images/bkzs/off.png" alt="" class="offShelf" v-if="d.state==3">
+                                        </a>
+                                    </dd>
+
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="no-resource" v-show="prepStat==1">
+                        <img src="../images/bkzs/noRes.png" alt="" class="noRes">
+                        <p>暂无资源，可一键同步专业编辑推荐资源～</p>
+                        <a href="javascript:void(0)" class="synRes op-hover" @click="addAllLessons">一键同步</a>
+                    </div>
+                    <div class="no-resource" v-show="prepStat==2">
+                        <img src="../images/bkzs/noRes.png" alt="" class="noRes">
+                        <p>暂无资源，可添加资源～</p>
+                        <a href="../index.html" class="addRes op-hover" target="_blank">添加资源</a>
+                    </div>
+                </dd>
+
+
+                <!-- 推荐资源 -->
+                <dd class="tab-pane show" v-if="showTab==1">
+                    <div class="with-resource" v-show="remStat==0">
+                        <div class="contentBrdr hrContent">
+                            <dl>
+                                    <dd v-for="d in remDataList">
+                                        <img src="../images/bkzs/new.png" alt="" class="newIcon" v-show="judgeIsNew(d.createTime)">
+                                        <button class="addToClass op-hover" @click.stop="addOneLesson(d.resourceId,d.recommendId)">加入备课</button>
+                                        <a :href="'../details/details.html?resource_id='+d.resourceId" target="_blank" class="each-item">
+                                        <aside>
+                                            <ul>
+                                                <li class="title clearfix">
+                                                    <div class="types">
+                                                        <img :src="'../images/indexIcons/'+d.resourceFormatId+'.png'" alt="" class="hrNo">
+                                                        <span>{{d.resourceTypeOneLevelValue}}</span>
+                                                    </div>
+                                                    <span class="resTitle">{{d.resourceName}}</span>
+                                                    <img src="../images/bkzs/remmend.png" class="remIcon" v-if="d.resourceLevel=='0'">
+                                                </li>
+                                                <li class="wzcontent"><em>资源描述：</em>{{truncate(d.resourceDes)}}</li>
+                                                <li class="author"><em>资源作者：</em>{{d.createUserName}}</li>
+                                                <!--<li class="catalog"><em>版权期限：</em>{{getCopyrightName(d.copyright)}}</li>-->
+                                                <li class="knowlege"><em>知识点：</em><span> {{d.knowledgeName}}</span></li>
+                                                <li class="time"><em>上传时间：</em>{{d.createDateTime}}</li>
+                                                <li class="time2"><em>上传时间：</em>{{retime(d.createDateTime)}}</li>
+                                            </ul>
+
+                                        </aside>
+                                        <!--<div class="vt vtDown">-->
+                                            <!--<div class="fileSize">{{bytesToSize(d.fileSize)}}</div>-->
+                                            <!--<img src="images/defaultPhoto.png" alt="" class="photo">-->
+                                            <!--<a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='0'|| d.isFree=='2' || (d.isFree=='1' && d.isPurchased =='1')" :data-id="d.id" >下载</a>-->
+                                            <!--<a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='1' && d.isPurchased =='1'" :data-id="d.id" >下载</a>-->
+                                            <!--<a data-free="1" :data-href="'/static/stage/pay/submitOrder.html?resourceId='+d.id" class="price" v-if="d.isFree=='1' && d.isPurchased =='0'">¥ {{d.cost}}</a>-->
+                                        <!--</div>-->
+                                        <aside class="hrRht">
+                                            <div class="conlft">
+                                                <ul>
+                                                    <li class="hrNo">
+                                                        <span class="free" v-if="d.isFree=='0'">免费</span>
+                                                        <span class="free" v-if="d.isFree=='1'">收费</span>
+                                                        <span class="free" v-if="d.isFree=='2'">限时免费</span>
+                                                    </li>
+                                                    <li class="hrNo"><span class="viewNum">{{d.pageview || 0}}</span></li>
+                                                    <li class="hrNo"><span class="downloadNum">{{d.downloads || 0}}</span></li>
+                                                    <li class="hrNo"><span class="fileSize">{{bytesToSize(d.fileSize)}}</span></li>
+                                                    <li>
+                                                        <img :src="'images/star/star'+parseInt(d.score)+'.png'" v-if="d.score>0 && d.score<=5" >
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </aside>
+                                        </a>
+                                    </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="no-resource" v-show="remStat==1">
+                        <img src="../images/bkzs/noRes.png" alt="" class="noRes">
+                        <p>暂无推荐资源，敬请期待～</p>
+                    </div>
+                </dd>
+
+            </dl>
+            <div class="fenye">
+                <vue-nav :cur="cur" :all="all" v-on:btnclick="listens" ></vue-nav>
+            </div>
+        </div>
+
+
+    </div>
+    <div id="layout_footer"></div>
+</div>
+<div id="footer">
+    <vfooter></vfooter>
+</div>
+<template id="text-book">
+    <li>
+        <div :class="[{folder: isFolder},'tree_row']" v-on:click="toggle" v-show="!isRoot">
+            <span v-if="isFolder" :class="{f_open:open,f_close:!open}"></span>
+            <span v-else class="f_spacer"></span>
+            <span :class="['f_name',{'color-active': model.id == chooseId}]" :data-id="model.id" :data-pid="model.pid" :title="model.name" :data-deep="model.deep" v-on:click.stop="chooseitem(model)">{{model.name}}</span>
+        </div>
+        <ul v-show="open || (isRoot && !open)" v-if="isFolder" :class="{'no-plf': isRoot}">
+            <item-tree class="item" v-for="model in model.children" :model="model" @chooseitem="chooseitem" :closestat="closestat"></item-tree>
+        </ul>
+    </li>
+</template>
+<script src="../js/bkzs/operate.js"></script>
+</body>
+</html>

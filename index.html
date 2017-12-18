@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>同步资源</title>
+    <link rel="stylesheet" href="css/public.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/orderList.css">
+    <script src="js/plugins/jquery/dist/jquery.min.js"></script>
+    <script src="js/plugins/vue/dist/vue.min.js"></script>
+    <script src="js/public.js"></script>
+    <script  src="js/vue-nav.js"></script>
+    <!--<div class="nameBrdr"><span  :class="{plus:open==false,minus:open==true}" v-if="isFolder"></span><strong v-if="!isFolder"></strong><em :data-pid="model.pId" :data-id="model.id">{{model.name}}</em></div>-->
+    <!--<script type="text/x-template" id="item-template">-->
+        <!--<li class="item">-->
+            <!--<div class="treeTitle" @click="toggle">-->
+                <!--<div class="nameBrdr"><span :class="{minus:model.open,plus:!model.open}"></span><em :data-open="isFolder" class="tips" :data-pid="model.pId" :data-id="model.id" :title="model.name" :data-iid="model.iid" :data-deep="model.deep">{{model.name}}</em></div>-->
+            <!--</div>-->
+            <!--<ul v-show="open" v-if="isFolder">-->
+                <!--<item-->
+                        <!--v-for="model in model.children" :model="model" :my-init="myInit" :is-root="false">-->
+                <!--</item>-->
+            <!--</ul>-->
+        <!--</li>-->
+    <!--</script>-->
+
+    <script src="js/index.js"></script>
+    <script>
+////页面分页查询 /index/list
+//	    var ajaxUrl="json/index.json";
+//	    //获取学段信息 /rs/getPhase
+//	    var phaseUrl="json/getPhase.json";
+//	    //获取学科信息 /rs/getSubject
+//	    var subjectUrl="json/getSubject.json";
+//	    //	    获取学段、学科下的目录信息/rs/getCategoriesByPS
+//	    var  getCategoriesByPSUrl="json/getCategoriesByPS.json";
+//	    //	    获取学段、学科下的知识点信息/rs/getKnowledgesByPS
+//	    var  getKnowledgesByPSUrl="json/getKnowledgesByPS.json";
+//	    //获取资源类别（一级类别） /rs/getResourceClass
+//	    var resourceclassUrl="json/getResourceClass.json";
+//	    //获取资源格式 /rs/getResourceFormat
+//	    var resourceFormatUrl="json/getResourceFormat.json";
+//	    //获取出版社信息 /rs/getPublisher
+//	    var publisherUrl="json/getPublisher.json";
+//	    //	    获取右侧知识点/rs/getKnowledgesByPid
+//	    var rightKnowledgeUrl="json/getKnowledgesByPid.json";
+//	    //取消收藏资源/myCollection/cancelCollectionResources
+//	    var fUrl="json/myCollected.json";
+//	    //收藏资源/myCollection/collectionResources
+//	    var rUrl="json/myCollected.json";
+////	    资源详情-检查下载数/resInfo/checkResDownload
+//        var numUrl="json/checkResDownload.json";
+////	     获取存储服务器地址	/base/ getStorageHost
+//        var storageUrl="json/getStorageHost.json";
+
+        //页面分页查询 /rs/list
+	    var ajaxUrl="/rs/list";
+//        var ajaxUrl="json/index.json"
+	    //获取学段信息 /rs/getPhase
+	    var phaseUrl="/rs/getPhase";
+	    //获取学科信息 /rs/getSubject
+	    var subjectUrl="/rs/getSubject";
+//	    获取学段、学科下的目录信息/rs/getCategoriesByPS
+        var  getCategoriesByPSUrl="/rs/getCategoriesByPS";
+//	    获取学段、学科下的知识点信息/rs/getKnowledgesByPS
+	    var  getKnowledgesByPSUrl="/rs/getKnowledgesByPS";
+	    //获取资源类别（一级类别） /rs/getResourceClass
+	    var resourceclassUrl="/rs/getResourceClass";
+	    //获取资源格式 /rs/getResourceFormat
+	    var resourceFormatUrl="/rs/getResourceFormat";
+        //获取出版社信息 /rs/getPublisher
+	    var publisherUrl="/rs/getPublisher";
+//	    获取右侧知识点/rs/getKnowledgesByPid
+	    var rightKnowledgeUrl="/rs/getKnowledgesByPid";
+	    //取消收藏资源/myCollection/cancelCollectionResources
+	    var fUrl="/myCollection/cancelCollectionResources";
+	    //收藏资源/myCollection/collectionResources
+	    var rUrl="/myCollection/collectionResources";
+//	    资源详情-检查下载数/resInfo/checkResDownload
+        var numUrl="/resInfo/checkResDownload";
+//	 	     获取存储服务器地址	/base/ getStorageHost
+	    var storageUrl="/base/getStorageHost";
+        //加入我的备课  单条
+        var addBkUrl = "/bk/addMine";
+        //删除我的备课
+        var removeBkUrl = "/bk/deleteMine";
+        //查找父级目录
+        var getParentCategoresUrl = "/bk/getParentCategores";
+    </script>
+</head>
+<body>
+<template id="know-tree">
+    <li>
+        <div :class="[{folder: isFolder},'tree_row']" v-on:click="toggle" v-show="!isRoot">
+            <span v-if="isFolder" :class="{f_open:open,f_close:!open}"></span>
+            <span v-else class="f_spacer"></span>
+            <span :class="['f_name',{'color-active': model.id == chooseId}]" :data-id="model.id" :data-pid="model.pid" :title="model.name" :data-deep="model.deep" v-on:click.stop="chooseitem(model)">{{model.name}}</span>
+        </div>
+        <ul v-show="open || (isRoot && !open)" v-if="isFolder" :class="{'no-plf': isRoot}">
+            <item-tree class="item" v-for="model in model.children" :model="model" @chooseitem="chooseitem" :closestat="closestat"></item-tree>
+        </ul>
+    </li>
+</template>
+<div class="alertTopBar"></div>
+<div id="container">
+    <header id="vhead">
+        <vheader></vheader>
+        <vsearch></vsearch>
+    </header>
+    <div class="maincontent" id="app" v-cloak>
+        <div class="lft">
+            <div class="school">
+                <dl>
+                    <dt>学段</dt>
+                    <dd><span :data-code="phase">{{selectphase}}</span>
+                        <div class="pList">
+                            <ul class="phase">
+                                <li v-for="p in initPhase" :data-code="p.code">{{p.name}}</li>
+                            </ul>
+                        </div>
+                    </dd>
+                </dl>
+                <dl>
+                    <dt>学科</dt>
+                    <dd><span :data-code="subject">{{selectsubject}}</span>
+                        <div class="pList">
+                            <ul class="subject">
+                                <li v-for="s in initSubject" :data-code="s.code">{{s.name}}</li>
+                            </ul>
+                        </div>
+                    </dd>
+                </dl>
+            </div>
+            <div class="tabSwitch">
+                <ul class="tabs">
+                    <li :class="{hovers:hovers==1}" data-code="1">教材</li>
+                    <li :class="{hovers:hovers==2}" data-code="2">知识点</li>
+                </ul>
+                <!--<ul  class="tree">-->
+                    <!--<item :model="treeData" :my-init="initItem" :is-root="true"></item>-->
+                <!--</ul>-->
+                <ul class="knowledge-tree">
+                    <item-tree class="item" :model="bookTreeData" @chooseitem="chooseitem" v-show="hovers==1" :closestat="trigger"></item-tree>
+                    <item-tree class="item" :model="knowTreeData" @chooseitem="chooseitem" v-show="hovers==2" :closestat="trigger"></item-tree>
+                </ul>
+            </div>
+        </div>
+        <div class="rht">
+            <div class="selectTop">
+                <dl>
+                    <dt>类别</dt>
+                    <dd data-type="resourceClass" class="slct">
+                        <span :class="{selected:resourceClass==''}" data-code="">不限</span>
+                        <span v-for="r in initResourceClass" :data-code="r.code" :class="{selected:resourceClass==r.code}">{{r.name}}</span>
+                    </dd>
+                    <div class="arrow"></div>
+                </dl>
+                <dl>
+                    <dt>格式</dt>
+                    <dd data-type="resourceFormat" class="slct">
+                        <span :class="{selected:resourceFormat==''}" data-code="">不限</span>
+                        <span v-for=" f in initresourceFormat" :data-code="f.code" :class="{selected:resourceFormat==f.code}">{{f.name}}</span>
+                    </dd>
+                    <div class="arrow"></div>
+                </dl>
+                <dl :class="{nodisplay:hovers==1}" >
+                    <dt>版本</dt>
+                    <dd data-type="categoryCode" class="slct">
+                        <span :class="{selected:(categoryCode==null || categoryCode=='')}" data-code="">不限</span>
+                        <span v-for=" p in initPublisher" :data-code="p.code" :class="{selected:categoryCode==p.code}">{{p.name}}</span>
+                    </dd>
+                    <div class="arrow"></div>
+                </dl>
+                <dl :class="{nodisplay:hovers==2}"  id="rightKnow">
+                    <div class="dt">知识点</div>
+                    <div class="dd">
+                        <div class="choseBrdr">
+                        </div>
+                        <div class="choseSlct">
+                            <dd v-if="initRightKnowlege == ''">
+                                <span>该学段学科下暂无知识点</span>
+                            </dd>
+                            <dd v-else v-for="arr,index in initRightKnowlege" data-init="1" :data-deep="arr[0].deep">
+                                <span :class="{selected:(knowledgeCode==null || knowledgeCode==''|| knowledgeCode==0)}" data-id="" data-pid="" :data-deep="arr[0].deep" v-if="index==0">不限</span>
+                                <span :class="{selected:(knowledgeCode==null || knowledgeCode==''|| knowledgeCode==0)}" :data-id="arr[0].pId" data-pid="" :data-deep="arr[0].deep" v-if="index!=0">不限</span>
+                                <span v-for=" t in arr" :data-pid="t.pId" :data-id="t.id" :data-deep="t.deep" :class="{selected:knowledgeCode==t.id}">{{t.name}}</span>
+                            </dd>
+                        </div>
+                    </div>
+                    <div class="arrow"></div>
+                </dl>
+            </div>
+            <div class="selectBrdr">
+                <div class="selectLft">
+                    <ul>
+                        <li data-type="sort">
+                            <div class="selectTit">排序<span>|</span></div>
+                            <span data-code="pageview" :class="{selectz:sort=='pageview'}">浏览量</span>
+                            <span data-code="downloads" :class="{selectz:sort=='downloads'}">下载量</span>
+                            <span data-code="createDateTime" :class="{selectz:sort=='createDateTime'}">时间</span>
+                        </li>
+                        <!--<li data-type="isFree" >-->
+                            <!--<div class="selectTit">价格<span>|</span></div>-->
+                            <!--<span  data-code="" :class="{selectz:isFree==''}">不限</span>-->
+                            <!--<span data-code="0" :class="{selectz:isFree=='0'}">免费</span>-->
+                            <!--<span data-code="1"  :class="{selectz:isFree=='1'}">收费</span>-->
+                        <!--</li>-->
+                        <li data-type="resourceLevel">
+                            <div class="selectTit">等级<span>|</span></div>
+                            <span data-code="" :class="{selectz:resourceLevel==''}">不限</span>
+                            <span  data-code="0" :class="{selectz:resourceLevel=='0'}">精品</span>
+                            <span  data-code="1" :class="{selectz:resourceLevel=='1'}">普通</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="selectRht">
+                    <span data-code="1"  :class="{horizontal:'true',selectPattern:hrVt==1}"></span>
+                    <span data-code="2"  :class="{vertical:'true',selectPattern:hrVt==2}"></span>
+                </div>
+
+            </div>
+            <div :class="{contentBrdr:'true',hrContent:hrVt==1,vtContent:hrVt==2}">
+                    <dl v-for="d in dataList">
+                        <a :href="'details/details.html?resource_id='+d.id" target="_blank" >
+                        <dt class="imgBrdr">
+                            <div class="essence" v-if="d.resourceLevel=='0'">精品</div>
+                            <div class="types">
+                                <img :src="'images/indexIcons/'+d.resourceFormatId+'.png'" alt="" class="hrNo"><img :src="'images/indexIcons/'+d.resourceFormatId+'_vt.png'" alt="" class="vt">{{d.resourceTypeOneLevelValue}}</div>
+                            <div class="imgBg">
+                                <img :src="contactImg(d.coverPath,d.resourceFormatId)" alt="">
+                            </div>
+                        </dt>
+                        <dd>
+                            <aside>
+                                <ul>
+                                    <li class="title">{{d.resourceName}}</li>
+                                    <li class="wzcontent"><em>资源描述：</em>{{truncate(d.resourceDes)}}</li>
+                                    <li class="author"><em>资源作者：</em>{{d.createUserName}}</li>
+                                    <!--<li class="catalog"><em>版权期限：</em>{{getCopyrightName(d.copyright)}}</li>-->
+                                    <li class="knowlege"><em>知识点：</em><span> {{d.knowledgeName}}</span></li>
+                                    <li class="time"><em>上传时间：</em>{{d.createDateTime}}</li>
+                                    <li class="time2"><em>上传时间：</em>{{retime(d.createDateTime)}}</li>
+                                </ul>
+                                <a href="javascript:void(0);" class="addToLesson"> <span :class="{unadded:d.mineId =='',added:d.mineId !=''}"  :data-id="d.id" :data-mid="d.mineId"></span></a>
+                                <a href="javascript:void(0);" class="collect"> <span :class="{favorite:d.isCollection=='0',favoriteF:d.isCollection=='1'}"  :data-id="d.id"></span></a>
+                            </aside>
+                            <div class="vt vtDown">
+                                <div class="fileSize">{{bytesToSize(d.fileSize)}}</div>
+                                <img src="images/defaultPhoto.png" alt="" class="photo">
+                                <!--<a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='0'|| d.isFree=='2' || (d.isFree=='1' && d.isPurchased =='1')" :data-id="d.id" >下载</a>-->
+                                <a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='1' && d.isPurchased =='1'" :data-id="d.id" >下载</a>
+                                <a data-free="1" :data-href="'/static/stage/pay/submitOrder.html?resourceId='+d.id" class="price" v-if="d.isFree=='1' && d.isPurchased =='0'">¥ {{d.cost}}</a>
+                            </div>
+                            <aside class="hrRht">
+                                <div class="conlft">
+                                    <ul>
+                                        <li class="hrNo">
+                                            <span class="free" v-if="d.isFree=='0'">免费</span>
+                                            <span class="free" v-if="d.isFree=='1'">收费</span>
+                                            <span class="free" v-if="d.isFree=='2'">限时免费</span>
+                                        </li>
+                                        <li class="hrNo"><span class="viewNum">{{d.pageview}}</span></li>
+                                        <li class="hrNo"><span class="downloadNum">{{d.downloads}}</span></li>
+                                        <li class="hrNo"><span class="fileSize">{{bytesToSize(d.fileSize)}}</span></li>
+                                        <li>
+                                            <img :src="'images/star/star'+parseInt(d.score)+'.png'" v-if="d.score>0 && d.score<=5" >
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="conrht hrNo">
+                                    <!--<a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='0'|| d.isFree=='2'" :data-id="d.id">免费下载</a>-->
+                                    <a data-free="0" :data-href="'/resInfo/download?resource_id='+d.id+'&&user_id='+user_id" class="download" v-if="d.isFree=='1' && d.isPurchased =='1'" :data-id="d.id">立即下载</a>
+                                    <a data-free="1" :data-href="'/static/stage/pay/submitOrder.html?resourceId='+d.id" class="price" v-if="d.isFree=='1' && d.isPurchased =='0'">¥ {{d.cost}}</a>
+                                </div>
+                            </aside>
+                        </dd>
+                        </a>
+                    </dl>
+            </div>
+            <div >
+                <vue-nav :cur="cur" :all="all" v-on:btnclick="listens" ></vue-nav>
+            </div>
+        </div>
+    </div>
+    <div id="layout_footer"></div>
+</div>
+<div id="footer">
+    <vfooter></vfooter>
+</div>
+</body>
+</html>
